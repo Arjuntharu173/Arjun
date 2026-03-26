@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Good Morning, Love ❤️</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #ff9a9e 0%, #fad0c4 45%, #1b1b2f 100%);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+      padding: 20px;
+    }
+
+    .card {
+      max-width: 720px;
+      color: white;
+      text-shadow: 0 0 18px rgba(255,255,255,0.35);
+      animation: fadeIn 2s ease forwards;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #fff, #ffd6f3, #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.4));
+    }
+
+    p {
+      margin: 16px 0 0;
+      font-size: clamp(1rem, 2.2vw, 1.4rem);
+      line-height: 1.6;
+      color: #fff7fb;
+    }
+
+    .hint {
+      margin-top: 24px;
+      font-size: 0.95rem;
+      opacity: 0.85;
+      animation: pulse 2.5s infinite;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(18px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <div class="overlay">
+    <div class="card">
+      <h1>Good Morning, My Love 💖</h1>
+      <p>
+        Wake up beautiful, the sun is already jealous of your glow.<br>
+        May your day be as sweet, warm, and magical as your smile.
+      </p>
+      <div class="hint">Tap anywhere for a heart burst ✨</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
+
+    let w, h, particles = [], floaters = [];
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+      init();
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    class Particle {
+      constructor(x, y, tx, ty, color) {
+        this.x = x;
+        this.y = y;
+        this.tx = tx;
+        this.ty = ty;
+        this.vx = 0;
+        this.vy = 0;
+        this.size = rand(1.2, 2.8);
+        this.color = color;
+      }
+      update() {
+        const dx = this.tx - this.x;
+        const dy = this.ty - this.y;
+        this.vx += dx * 0.012;
+        this.vy += dy * 0.012;
+        this.vx *= 0.88;
+        this.vy *= 0.88;
+        this.x += this.vx;
+        this.y += this.vy;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 12;
+        ctx.fill();
+      }
+    }
+
+    class Floater {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = rand(0, w);
+        this.y = h + rand(20, 200);
+        this.size = rand(10, 26);
+        this.speed = rand(0.4, 1.4);
+        this.alpha = rand(0.25, 0.8);
+        this.spin = rand(-0.02, 0.02);
+        this.rot = rand(0, Math.PI * 2);
+      }
+      update() {
+        this.y -= this.speed;
+        this.rot += this.spin;
+        if (this.y < -40) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rot);
+        ctx.globalAlpha = this.alpha;
+        ctx.font = `${this.size}px serif`;
+        ctx.fillText("💗", 0, 0);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function heartPoints() {
+      const points = [];
+      const scale = Math.min(w, h) / 30;
+      const cx = w / 2;
+      const cy = h / 2 - 20;
+
+      for (let t = 0; t < Math.PI * 2; t += 0.02) {
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        points.push([cx + x * scale, cy - y * scale]);
+      }
+      return points;
+    }
+
+    function init() {
+      particles = [];
+      floaters = [];
+
+      const pts = heartPoints();
+      const colors = ["#ff4d8d", "#ff6fb5", "#ffd1e8", "#ffffff"];
+
+      for (let i = 0; i < 900; i++) {
+        const p = pts[Math.floor(Math.random() * pts.length)];
+        particles.push(
+          new Particle(
+            rand(0, w),
+            rand(0, h),
+            p[0],
+            p[1],
+            colors[Math.floor(Math.random() * colors.length)]
+          )
+        );
+      }
+
+      for (let i = 0; i < 45; i++) floaters.push(new Floater());
+    }
+
+    function burst(x, y) {
+      for (let i = 0; i < 28; i++) {
+        particles.push(new Particle(
+          x, y,
+          x + rand(-180, 180),
+          y + rand(-180, 180),
+          ["#ff4d8d", "#ff8fc1", "#fff"][Math.floor(Math.random() * 3)]
+        ));
+      }
+    }
+
+    function drawBackground() {
+      const g = ctx.createRadialGradient(w/2, h/2, 40, w/2, h/2, Math.max(w, h));
+      g.addColorStop(0, "rgba(255,255,255,0.12)");
+      g.addColorStop(0.35, "rgba(255,105,180,0.08)");
+      g.addColorStop(1, "rgba(0,0,0,0.35)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      drawBackground();
+
+      for (const f of floaters) {
+        f.update();
+        f.draw();
+      }
+
+      for (const p of particles) {
+        p.update();
+        p.draw();
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("click", (e) => burst(e.clientX, e.clientY));
+    window.addEventListener("touchstart", (e) => {
+      const t = e.touches[0];
+      if (t) burst(t.clientX, t.clientY);
+    });
+
+    resize();
+    animate();
+  </script>
+</body>
+</html>
